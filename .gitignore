@@ -1,0 +1,9 @@
+*.swp
+.settings.xml
+.DS_Store
+*.gz
+.monitor
+node_modules/
+pids/
+npm-debug.log
+*.css

@@ -1,0 +1,17 @@
+{
+  "name": "gamepadHelicopter",
+  "version": "0.0.1",
+  "author": "Tom Gallacher",
+  "description": "",
+  "homepage": "http://www.tomg.co/",
+  "engines": {
+    "node": "0.6.X"
+  },
+  "main": "./server.js",
+  "dependencies": {
+      "serialport": "*"
+    , "socket.io": "*"
+  },
+  "devDependencies": {
+  }
+}

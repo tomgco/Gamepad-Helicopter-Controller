@@ -1,0 +1,111 @@
+<b>Hello</b>
+<script src="/socket.io/socket.io.js"></script>
+<script>
+const CENTERED = 64;
+
+var socket = io.connect('http://localhost')
+  , controller
+  , controllerState = {
+        yaw: 63
+      , pitch: 63
+      , throttle: 0
+      , trim: 64
+    }
+  ;
+
+function flattenWobblyValues(axisValue,  sensitivity) {
+  // 1 is really sensitive, treat her carfully ;)
+  // 127 is on off.
+
+  if (axisValue > CENTERED) {
+    if ((axisValue - sensitivity) < CENTERED) {
+      return CENTERED;
+    }
+  } else if (axisValue < CENTERED){
+    if ((axisValue + sensitivity) > CENTERED) {
+      return CENTERED;
+    }
+  }
+
+  return axisValue;
+}
+
+socket.on('connection', function (data) {
+  var controllerLoop = setInterval(getControllerState, 250);
+});
+
+function getControllerState(e) {
+  console.log(controllerState);
+  socket.emit('control', controllerState);
+}
+
+// Run When a gamepad is connected
+function onGamepadConnected(e) {
+  controller = e.gamepad;
+  console.log("Gamepad connected", controller.id);
+}
+
+// Run on button change
+function onGamepadButtonDown(e) {
+  var button = e.button;
+  console.log("Gamepad button pressed", button);
+}
+
+function onGamepadButtonUp(e) {
+  var button = e.button;
+  console.log("Gamepad button released", button);
+}
+
+// Run on axis move
+function onGamepadAxisMove(e) {
+  var axis = e.axis,
+    value = (e.value * 64) + 64;
+
+  switch (e.axis) {
+    case 1:
+      // console.log("Gamepad axis move", axis, );
+      value = value > 126 ? 126 : value;
+      controllerState.yaw = flattenWobblyValues(value, 1);
+      // x left axis
+      break;
+    case 2:
+      // console.log("Gamepad axis move", axis, flattenWobblyValues(value, 10));
+      // y left axis
+      controllerState.pitch = flattenWobblyValues(value, 1);
+      break;
+    case 3:
+      // right x axis
+      break;
+    case 4:
+      // console.log("Gamepad axis move", axis, flattenWobblyValues(value, 10));
+      // right y axis
+      value = -(value - 63);
+      value = (value < 0) ? 0 : value * 2;
+      controllerState.throttle = flattenWobblyValues(value, 2);
+      break;
+  }
+}
+
+// Run When a gamepad is disconnected
+function onGamepadDisconnected(e) {
+  console.log("Gamepad disconnected", e.controller.id);
+}
+
+// Poll gamepad state on the fly (call this inside a timeout or requestAnimationFrame)
+function checkState() {
+  for (var i = 0; i < controller.buttons.length; i++) {
+    console.log("Button state", i, controller.buttons[i]);
+  }
+
+  for (var j = 0; j < controller.axes.length; j++) {
+    console.log("Axis state", j, controller.axes[j]);
+  }
+}
+
+window.addEventListener("MozGamepadConnected", onGamepadConnected);
+window.addEventListener("MozGamepadDisconnected", onGamepadDisconnected);
+
+window.addEventListener("MozGamepadButtonDown", onGamepadButtonDown);
+window.addEventListener("MozGamepadButtonUp", onGamepadButtonUp);
+window.addEventListener("MozGamepadAxisMove", onGamepadAxisMove);
+</script>
